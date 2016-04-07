@@ -26,6 +26,7 @@
 #include <linux/types.h>
 #include <net/tcp.h>
 #include <net/tcp_states.h>
+#include <linux/version.h>
 
 #include <net/net_namespace.h>
 
@@ -109,6 +110,7 @@ static int tcp_seq_show(struct seq_file *seq, void *v) {
 				}
 				break;
 			}
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(4,3,0)
 			case TCP_SEQ_STATE_OPENREQ: {
 				const struct inet_request_sock *ireq = inet_rsk(v);
 
@@ -129,6 +131,7 @@ static int tcp_seq_show(struct seq_file *seq, void *v) {
 
 				break;
 			}
+#endif
 			default:
 				return 0;
 		}
@@ -194,6 +197,16 @@ static int tcp_seq_show(struct seq_file *seq, void *v) {
 			if (sock_flag(sk, SOCK_LINGER)) {
 				seq_printf(seq, ",SO_LINGER=%lds", sk->sk_lingertime / HZ);
 			}
+
+            if (inet_csk(sk)->icsk_ca_ops->name)
+            {
+                seq_printf(seq, ",SO_CONG_NAME=%s",
+                        inet_csk(sk)->icsk_ca_ops->name);
+            }
+            else{
+                seq_printf(seq, ",SO_CONG_NAME=-");
+            }
+
 
 			seq_printf(seq, ",TCP_NODELAY=%d", !!(tcp_sk(sk)->nonagle&TCP_NAGLE_OFF));
 		}
